@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Live exchange rates of major world currencies against the Indian Rupee (INR). Get today's forex rates, updated regularly.">
+  <meta name="keywords" content="Forex rates, INR forex, Currency exchange, INR to USD, INR to EUR, INR to GBP, INR conversion, Forex table, INR live rates">
+  <title>Forex Price Today</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f4f4;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark-mode {
+      background: #121212;
+      color: #e0e0e0;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2em;
+    }
+    #refresh-btn {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      color: #333;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    
+    body.dark-mode #refresh-btn {
+      color: #888;
+    }
+    
+    #refresh-btn:hover {
+      color: #007acc;
+      transition: all 0.3s ease-in-out;
+      transform: rotate(360deg);
+    }
+
+    body.dark-mode #refresh-btn:hover {
+      color: #90caf9;
+      transition: all 0.3s ease-in-out;
+      transform: rotate(360deg);
+    }
+
+    #toggleMode {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 1.5em;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+    }
+    #toggleDirection {
+      display: block;
+      margin: 10px auto;
+      font-size: 1.5em;
+      background: none;
+      border: none;
+      border-radius: none;
+      padding: none;
+      cursor: pointer;
+      color: #007acc;
+    }
+    #toggleDirection:hover {
+      background-color: #007acc;
+      color: #f4f4f4;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    body.dark-mode #toggleDirection {
+      color: #90caf9;
+    }
+    body.dark-mode #toggleDirection:hover {
+      background-color: #90caf9;
+      color: #444;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    #mainRate {
+      font-size: 2.5em;
+      text-align: center;
+      margin: 30px 0 10px;
+      color: #007acc;
+      transition: all 0.3s ease-in-out;
+    }
+    #mainRate + #toggleDirection {
+      margin-top: 10px;
+    }
+    body.dark-mode #mainRate {
+      color: #90caf9;
+    }
+    @media (max-width: 600px) {
+      #mainRate {
+        font-size: 1.8em;
+      }
+      h1 {
+        font-size: 1.5em;
+      }
+      #toggleMode {
+        font-size: 1.2em;
+      }
+    }
+    #search {
+      display: block;
+      margin: 0 auto 20px;
+      padding: 10px;
+      width: 90%;
+      max-width: 400px;
+      font-size: 1em;
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-family: 'Bricolage Grotesque', sans-serif;
+    }
+    body.dark-mode #search {
+      background-color: #1e1e1e;
+      color: #fff;
+      border: 1px solid #444;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 400px;
+      transition: all 0.3s ease-in-out;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+    body.dark-mode th {
+      background-color: #1f1f1f;
+    }
+    body.dark-mode th, body.dark-mode td {
+      border-color: #444;
+    }
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+    body.dark-mode tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+    .flag {
+      width: 20px;
+      height: 14px;
+      margin: 0 6px;
+      vertical-align: middle;
+    }
+    #mainRate .flag {
+      width: 32px;
+      height: 24px;
+    }
+    tr {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeIn 0.5s ease forwards;
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    tr:hover {
+      background-color: #e6f2ff;
+      transition: background 0.3s ease;
+    }
+    body.dark-mode tr:hover {
+      background-color: #444;
+      transition: background 0.3s ease;
+    }
+    .sort-arrow {
+      display: none;
+      color: #007acc;
+      transition: all 0.3s ease-in-out;
+    }
+    body.dark-mode .sort-arrow {
+      display: none;
+      color: #90caf9;
+      transition: all 0.3s ease-in-out;
+    }
+    
+    /* Animate up and down rotation */
+    th[data-sort="asc"] .sort-arrow {
+      transform: rotate(180deg);
+      display: inline-block;
+    }
+    th[data-sort="desc"] .sort-arrow {
+      transform: rotate(0deg);
+      display: inline-block;
+    }
+
+  </style>
+</head>
+<body>
+  <button id="refresh-btn" title="Refresh Page">↻</button>
+  <button id="toggleMode" title="Toggle Dark Mode">🌙</button>
+  <h1>Forex Price Today</h1>
+  <div id="mainRate"></div>
+  <button id="toggleDirection">⇆</button>
+  <input type="text" id="search" placeholder="Search for another currency (e.g. PHP, NOK)" autofocus />
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortTable(0, this)">Currency <span class="sort-arrow"></span></th>
+          <th onclick="sortTable(1, this)">Name <span class="sort-arrow"></span></th>
+          <th onclick="sortTable(2, this)" id="tableHeader"><span class="header-text">1 FCY = INR</span> <span class="sort-arrow"></span></th>
+        </tr>
+      </thead>
+      <tbody id="ratesTable"></tbody>
+    </table>
+  </div>
+  <script>
+
+    document.getElementById('refresh-btn').addEventListener('click', () => {
+      location.reload();
+    });
+
+    const API_URL = 'https://v6.exchangerate-api.com/v6/8d67b5b7de03b813d28090f0/latest/INR';
+    const STORAGE_KEY = 'forex_data';
+    const STORAGE_TIME_KEY = 'forex_data_time';
+    const HALF_HOUR = 30 * 60 * 1000;
+
+    let direction = 'toINR';
+
+    const currencyDatabase = {
+      AED: { name: 'United Arab Emirates Dirham', flag: 'ae' }, AUD: { name: 'Australian Dollar', flag: 'au' },
+      BDT: { name: 'Bangladeshi Taka', flag: 'bd' }, CAD: { name: 'Canadian Dollar', flag: 'ca' },
+      CNY: { name: 'Chinese Yuan', flag: 'cn' }, EUR: { name: 'Euro', flag: 'eu' },
+      GBP: { name: 'British Pound', flag: 'gb' }, HKD: { name: 'Hong Kong Dollar', flag: 'hk' },
+      IDR: { name: 'Indonesian Rupiah', flag: 'id' }, IRR: { name: 'Iranian Rial', flag: 'ir' },
+      JPY: { name: 'Japanese Yen', flag: 'jp' }, LKR: { name: 'Sri Lankan Rupee', flag: 'lk' },
+      MUR: { name: 'Mauritian Rupee', flag: 'mu' }, MVR: { name: 'Maldivian Rufiyaa', flag: 'mv' },
+      MYR: { name: 'Malaysian Ringgit', flag: 'my' }, NPR: { name: 'Nepalese Rupee', flag: 'np' },
+      NZD: { name: 'New Zealand Dollar', flag: 'nz' }, OMR: { name: 'Omani Rial', flag: 'om' },
+      PKR: { name: 'Pakistani Rupee', flag: 'pk' }, QAR: { name: 'Qatari Riyal', flag: 'qa' },
+      RUB: { name: 'Russian Ruble', flag: 'ru' }, SAR: { name: 'Saudi Riyal', flag: 'sa' },
+      SGD: { name: 'Singapore Dollar', flag: 'sg' }, THB: { name: 'Thai Baht', flag: 'th' },
+      VND: { name: 'Vietnamese Dong', flag: 'vn' }, USD: { name: 'US Dollar', flag: 'us' },
+      INR: { name: 'Indian Rupee', flag: 'in' }
+    };
+
+    const showList = ['AED', 'AUD', 'BDT', 'CAD', 'CNY', 'EUR', 'GBP', 'HKD', 'IDR', 'IRR', 'JPY', 'LKR', 'MUR', 'MVR', 'MYR', 'NPR', 'NZD', 'OMR', 'PKR', 'QAR', 'RUB', 'SAR', 'SGD', 'THB', 'VND'];
+    let forexRates = {};
+    let currentSortIndex = null;
+    let currentSortDirection = null;
+
+    async function fetchRates() {
+      const now = Date.now();
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const savedTime = localStorage.getItem(STORAGE_TIME_KEY);
+
+      if (saved && savedTime && now - savedTime < HALF_HOUR) {
+        return JSON.parse(saved);
+      }
+
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(STORAGE_TIME_KEY, now);
+      return data;
+    }
+
+    function renderMainRate(currency, rate) {
+      const info = currencyDatabase[currency] || { name: currency, flag: currency.slice(0, 2).toLowerCase() };
+      const html = direction === 'toINR'
+        ? `<img class="flag" src="https://flagcdn.com/32x24/${info.flag}.png" alt="${currency}">
+           1 ${currency} = <span id="mainValue">${rate}</span> INR <img class="flag" src="https://flagcdn.com/32x24/in.png">
+           <div style="font-size: 0.5em;">${info.name}</div>`
+        : `<img class="flag" src="https://flagcdn.com/32x24/${info.flag}.png" alt="${currency}">
+           <span id="mainValue">${rate}</span> ${currency} = 1 INR <img class="flag" src="https://flagcdn.com/32x24/in.png">
+           <div style="font-size: 0.5em;">${info.name}</div>`;
+
+      document.getElementById('mainRate').innerHTML = html;
+    }
+
+    function renderRates(rates, filter = '') {
+      const table = document.getElementById('ratesTable');
+      table.innerHTML = '';
+
+      let visibleList = showList;
+      if (filter) {
+        visibleList = Object.keys(rates).filter(c => c.includes(filter));
+      }
+
+      const inrRate = rates['INR'];
+
+      visibleList.forEach(currency => {
+        if (rates[currency]) {
+          const info = currencyDatabase[currency] || { name: currency, flag: currency.slice(0, 2).toLowerCase() };
+          const rate = direction === 'toINR'
+            ? (rates['INR'] / rates[currency]).toFixed(4)
+            : (rates[currency] / rates['INR']).toFixed(4);
+          const row = `<tr data-currency="${currency}">
+            <td><img class="flag" src="https://flagcdn.com/24x18/${info.flag}.png" alt="${currency}"> ${currency}</td>
+            <td>${info.name}</td>
+            <td>${rate}</td>
+          </tr>`;
+          table.innerHTML += row;
+        }
+      });
+
+      const mainCurrency = filter && rates[filter] ? filter : 'USD';
+      const mainValue = direction === 'toINR'
+        ? (rates['INR'] / rates[mainCurrency]).toFixed(4)
+        : (rates[mainCurrency] / rates['INR']).toFixed(4);
+      if (currentSortIndex !== null && currentSortDirection !== null) {
+        const ths = document.querySelectorAll('thead th');
+        const th = ths[currentSortIndex];
+        th.dataset.sort = currentSortDirection;
+        const arrowSpan = th.querySelector('.sort-arrow');
+        if (arrowSpan) {
+          arrowSpan.innerHTML = '↑';
+          arrowSpan.style.display = 'inline-block';
+          arrowSpan.style.transform = currentSortDirection === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+      
+        const rows = Array.from(document.querySelectorAll('#ratesTable tr'));
+        rows.sort((a, b) => {
+          const valA = a.children[currentSortIndex].textContent.trim();
+          const valB = b.children[currentSortIndex].textContent.trim();
+          const numA = parseFloat(valA.replace(/,/g, ''));
+          const numB = parseFloat(valB.replace(/,/g, ''));
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return currentSortDirection === 'asc' ? numA - numB : numB - numA;
+          }
+          return currentSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        });
+      
+        const table = document.getElementById('ratesTable');
+        table.innerHTML = '';
+        rows.forEach(row => table.appendChild(row));
+      }
+
+      renderMainRate(mainCurrency, mainValue);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement !== document.getElementById('search')) {
+        document.getElementById('search').focus();
+      }
+    });
+
+    document.getElementById('search').addEventListener('input', () => {
+      const query = document.getElementById('search').value.toUpperCase();
+      renderRates(forexRates, query);
+    });
+
+    document.getElementById('toggleMode').addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const button = document.getElementById('toggleMode');
+      button.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    });
+
+    document.getElementById('toggleDirection').addEventListener('click', () => {
+      direction = direction === 'toINR' ? 'fromINR' : 'toINR';
+      document.querySelector('#tableHeader .header-text').textContent = direction === 'toINR' ? '1 FCY = INR' : '1 INR = FCY';
+      renderRates(forexRates, document.getElementById('search').value.toUpperCase());
+    });
+
+    fetchRates().then(data => {
+      if (data && data.conversion_rates) {
+        forexRates = data.conversion_rates;
+        renderRates(forexRates);
+      } else {
+        document.getElementById('mainRate').textContent = 'Failed to load data.';
+      }
+    });
+
+    function sortTable(colIndex, thElement) {
+      const rows = Array.from(document.querySelectorAll('#ratesTable tr'));
+      const currentSort = thElement.dataset.sort || 'none';
+      const newSort = currentSort === 'asc' ? 'desc' : 'asc';
+      currentSortIndex = colIndex;
+      currentSortDirection = newSort;
+    
+      // Clear sort indicators from all headers
+      document.querySelectorAll('th').forEach(th => {
+        th.removeAttribute('data-sort');
+        const span = th.querySelector('.sort-arrow');
+        if (span) {
+          span.style.transform = '';
+          span.style.display = 'none'; // Hide the arrow for inactive headers
+        }
+      });
+      
+      // Set new sort direction and arrow
+      thElement.dataset.sort = newSort;
+      const arrowSpan = thElement.querySelector('.sort-arrow');
+      if (arrowSpan) {
+        arrowSpan.innerHTML = '↑'; // Always ensure the arrow is there
+        // Force reflow to restart animation
+        arrowSpan.style.display = 'inline-block';
+        arrowSpan.style.transform = 'rotate(0deg)';
+        void arrowSpan.offsetWidth; // Trigger reflow
+        arrowSpan.style.transform = newSort === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+
+      rows.sort((a, b) => {
+        const valA = a.children[colIndex].textContent.trim();
+        const valB = b.children[colIndex].textContent.trim();
+    
+        const numA = parseFloat(valA.replace(/,/g, ''));
+        const numB = parseFloat(valB.replace(/,/g, ''));
+    
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return newSort === 'asc' ? numA - numB : numB - numA;
+        }
+    
+        return newSort === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      });
+    
+      const table = document.getElementById('ratesTable');
+      table.innerHTML = '';
+      rows.forEach(row => table.appendChild(row));
+    }
+
+  </script>
+</body>
+</html>
