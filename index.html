@@ -73,18 +73,34 @@
       cursor: pointer;
       color: #007acc;
     }
+    body.dark-mode #toggleDirection {
+      color: #90caf9;
+    }
     #toggleDirection:hover {
       background-color: #007acc;
       color: #f4f4f4;
       transition: background-color 0.3s, color 0.3s;
     }
-    body.dark-mode #toggleDirection {
-      color: #90caf9;
-    }
     body.dark-mode #toggleDirection:hover {
       background-color: #90caf9;
       color: #444;
       transition: background-color 0.3s, color 0.3s;
+    }
+    #toggleDirection.flipped {
+      transform: rotateY(180deg);
+      transition: transform 0.3s ease-in-out;
+    }
+    body.dark-mode #toggleDirection.flipped {
+      transform: rotateY(180deg);
+      transition: transform 0.3s ease-in-out;
+    }
+    #toggleDirection.flippedAgain {
+      transform: rotateY(0deg);
+      transition: transform 0.3s ease-in-out;
+    }
+    body.dark-mode #toggleDirection.flippedAgain {
+      transform: rotateY(0deg);
+      transition: transform 0.3s ease-in-out;
     }
     #mainRate {
       font-size: 2.5em;
@@ -108,6 +124,23 @@
       }
       #toggleMode {
         font-size: 1.2em;
+      }
+      .flag {
+        width: 15px;
+        height: 10px;
+        margin: 0 5px;
+      }
+      #mainRate .flag {
+        width: 24px;
+        height: 16px;
+      }
+      #search {
+        font-size: 0.8em;
+      }
+      th, td {
+        padding: 5px;
+        border: 1px solid #ccc;
+        text-align: center;
       }
     }
     #search {
@@ -165,13 +198,13 @@
       vertical-align: middle;
     }
     #mainRate .flag {
-      width: 32px;
+      width: 36px;
       height: 24px;
     }
     tr {
       opacity: 0;
       transform: translateY(10px);
-      animation: fadeIn 0.5s ease forwards;
+      animation: fadeIn 0.3s ease forwards;
     }
     @keyframes fadeIn {
       to {
@@ -371,9 +404,19 @@
       button.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
     });
 
-    document.getElementById('toggleDirection').addEventListener('click', () => {
+    const toggleBtn = document.getElementById('toggleDirection');
+    toggleBtn.addEventListener('click', () => {
       direction = direction === 'toINR' ? 'fromINR' : 'toINR';
       document.querySelector('#tableHeader .header-text').textContent = direction === 'toINR' ? '1 FCY = INR' : '1 INR = FCY';
+
+      if (direction === 'fromINR') {
+        toggleBtn.classList.remove('flippedAgain')
+        toggleBtn.classList.add('flipped');
+      } else {
+        toggleBtn.classList.remove('flipped')
+        toggleBtn.classList.add('flippedAgain');
+      }
+      
       renderRates(forexRates, document.getElementById('search').value.toUpperCase());
     });
 
