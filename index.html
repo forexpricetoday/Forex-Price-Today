@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="robots" content="index, follow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Live exchange rates of major world currencies against the Indian Rupee (INR). Get today's forex rates, updated regularly.">
   <meta name="keywords" content="Forex rates, INR forex, Currency exchange, INR to USD, INR to EUR, INR to GBP, INR conversion, Forex table, INR live rates">
   <title>Forex Price Today</title>
+  <link rel="icon" href="/favicon.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque&display=swap" rel="stylesheet">
   <style>
     body {
@@ -73,18 +75,34 @@
       cursor: pointer;
       color: #007acc;
     }
+    body.dark-mode #toggleDirection {
+      color: #90caf9;
+    }
     #toggleDirection:hover {
       background-color: #007acc;
       color: #f4f4f4;
       transition: background-color 0.3s, color 0.3s;
     }
-    body.dark-mode #toggleDirection {
-      color: #90caf9;
-    }
     body.dark-mode #toggleDirection:hover {
       background-color: #90caf9;
       color: #444;
       transition: background-color 0.3s, color 0.3s;
+    }
+    #toggleDirection.flipped {
+      transform: rotateY(180deg);
+      transition: transform 0.3s ease-in-out;
+    }
+    body.dark-mode #toggleDirection.flipped {
+      transform: rotateY(180deg);
+      transition: transform 0.3s ease-in-out;
+    }
+    #toggleDirection.flippedAgain {
+      transform: rotateY(0deg);
+      transition: transform 0.3s ease-in-out;
+    }
+    body.dark-mode #toggleDirection.flippedAgain {
+      transform: rotateY(0deg);
+      transition: transform 0.3s ease-in-out;
     }
     #mainRate {
       font-size: 2.5em;
@@ -99,6 +117,15 @@
     body.dark-mode #mainRate {
       color: #90caf9;
     }
+    #mainRate.fade {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #mainRate.show {
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
     @media (max-width: 600px) {
       #mainRate {
         font-size: 1.8em;
@@ -108,6 +135,23 @@
       }
       #toggleMode {
         font-size: 1.2em;
+      }
+      .flag {
+        width: 15px;
+        height: 10px;
+        margin: 0 5px;
+      }
+      #mainRate .flag {
+        width: 24px;
+        height: 16px;
+      }
+      #search {
+        font-size: 0.8em;
+      }
+      th, td {
+        padding: 5px;
+        border: 1px solid #ccc;
+        text-align: center;
       }
     }
     #search {
@@ -129,7 +173,19 @@
       border: 1px solid #444;
     }
     .table-wrapper {
+      max-height: 420px;
+      overflow-y: auto;
       overflow-x: auto;
+      scrollbar-width: none; /* for Firefox */
+    }
+    .table-wrapper::-webkit-scrollbar {
+      display: none; /* for Chrome, Safari, and Edge */
+    }
+    .table-wrapper.scrolled thead th {
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    body.dark-mode .table-wrapper.scrolled thead th {
+      box-shadow: 0 6px 12px rgba(255, 255, 255, 0.08);
     }
     table {
       width: 100%;
@@ -152,6 +208,18 @@
     body.dark-mode th, body.dark-mode td {
       border-color: #444;
     }
+    thead th {
+      position: sticky;
+      top: 0;
+      background-color: #f0f0f0;
+      z-index: 5;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      transition: box-shadow 0.3s ease;
+    }
+    body.dark-mode thead th {
+      background-color: #1f1f1f;
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.08);
+    }
     tr:nth-child(even) {
       background-color: #fafafa;
     }
@@ -165,13 +233,13 @@
       vertical-align: middle;
     }
     #mainRate .flag {
-      width: 32px;
+      width: 36px;
       height: 24px;
     }
     tr {
       opacity: 0;
       transform: translateY(10px);
-      animation: fadeIn 0.5s ease forwards;
+      animation: fadeIn 0.45s ease forwards;
     }
     @keyframes fadeIn {
       to {
@@ -216,7 +284,7 @@
   <h1>Forex Price Today</h1>
   <div id="mainRate"></div>
   <button id="toggleDirection">⇆</button>
-  <input type="text" id="search" placeholder="Search for another currency (e.g. PHP, NOK)" autofocus />
+  <input type="text" id="search" placeholder="Search for other currency (e.g. PHP, NOK)" autofocus />
   <div class="table-wrapper">
     <table>
       <thead>
@@ -232,7 +300,16 @@
   <script>
 
     document.getElementById('refresh-btn').addEventListener('click', () => {
-      location.reload();
+
+      if (document.body.classList.contains('dark-mode')) {
+        location.reload();
+        document.body.classList.toggle('dark-mode');
+        const button = document.getElementById('toggleMode');
+        button.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';        
+      } else {
+        location.reload();
+      }
+      
     });
 
     const API_URL = 'https://v6.exchangerate-api.com/v6/8d67b5b7de03b813d28090f0/latest/INR';
@@ -282,15 +359,27 @@
 
     function renderMainRate(currency, rate) {
       const info = currencyDatabase[currency] || { name: currency, flag: currency.slice(0, 2).toLowerCase() };
-      const html = direction === 'toINR'
-        ? `<img class="flag" src="https://flagcdn.com/32x24/${info.flag}.png" alt="${currency}">
-           1 ${currency} = <span id="mainValue">${rate}</span> INR <img class="flag" src="https://flagcdn.com/32x24/in.png">
-           <div style="font-size: 0.5em;">${info.name}</div>`
-        : `<img class="flag" src="https://flagcdn.com/32x24/${info.flag}.png" alt="${currency}">
-           <span id="mainValue">${rate}</span> ${currency} = 1 INR <img class="flag" src="https://flagcdn.com/32x24/in.png">
-           <div style="font-size: 0.5em;">${info.name}</div>`;
-
-      document.getElementById('mainRate').innerHTML = html;
+      const mainRateEl = document.getElementById('mainRate');
+    
+      // Trigger fade out
+      mainRateEl.classList.add('fade');
+      mainRateEl.classList.remove('show');
+    
+      setTimeout(() => {
+        const html = direction === 'toINR'
+          ? `<img class="flag" src="https://flagcdn.com/32x24/${info.flag}.png" alt="${currency}">
+             1 ${currency} = <span id="mainValue">${rate}</span> INR <img class="flag" src="https://flagcdn.com/32x24/in.png">
+             <div style="font-size: 0.5em;">${info.name}</div>`
+          : `<img class="flag" src="https://flagcdn.com/32x24/${info.flag}.png" alt="${currency}">
+             <span id="mainValue">${rate}</span> ${currency} = 1 INR <img class="flag" src="https://flagcdn.com/32x24/in.png">
+             <div style="font-size: 0.5em;">${info.name}</div>`;
+    
+        mainRateEl.innerHTML = html;
+    
+        // Trigger fade in
+        mainRateEl.classList.remove('fade');
+        mainRateEl.classList.add('show');
+      }, 150); // wait for fade out before updating content
     }
 
     function renderRates(rates, filter = '') {
@@ -371,9 +460,19 @@
       button.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
     });
 
-    document.getElementById('toggleDirection').addEventListener('click', () => {
+    const toggleBtn = document.getElementById('toggleDirection');
+    toggleBtn.addEventListener('click', () => {
       direction = direction === 'toINR' ? 'fromINR' : 'toINR';
       document.querySelector('#tableHeader .header-text').textContent = direction === 'toINR' ? '1 FCY = INR' : '1 INR = FCY';
+
+      if (direction === 'fromINR') {
+        toggleBtn.classList.remove('flippedAgain')
+        toggleBtn.classList.add('flipped');
+      } else {
+        toggleBtn.classList.remove('flipped')
+        toggleBtn.classList.add('flippedAgain');
+      }
+      
       renderRates(forexRates, document.getElementById('search').value.toUpperCase());
     });
 
@@ -386,6 +485,15 @@
       }
     });
 
+    const tableWrapper = document.querySelector('.table-wrapper');
+    tableWrapper.addEventListener('scroll', () => {
+      if (tableWrapper.scrollTop > 0) {
+        tableWrapper.classList.add('scrolled');
+      } else {
+        tableWrapper.classList.remove('scrolled');
+      }
+    });
+    
     function sortTable(colIndex, thElement) {
       const rows = Array.from(document.querySelectorAll('#ratesTable tr'));
       const currentSort = thElement.dataset.sort || 'none';
@@ -434,6 +542,18 @@
       rows.forEach(row => table.appendChild(row));
     }
 
+    document.querySelector('.table-wrapper').addEventListener('scroll', function () {
+      const thead = this.querySelector('thead');
+      if (this.scrollTop > 0) {
+        this.classList.add('scrolled');
+      } else {
+        this.classList.remove('scrolled');
+      }
+    });
+
   </script>
+  <footer style="text-align: center; font-size: 0.8em; margin-top: 10px; padding: 5px; color: gray;">
+    Disclaimer: Exchange rates are approximate and for informational purposes only.
+  </footer>
 </body>
 </html>
